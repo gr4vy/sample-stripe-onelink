@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gr4vy + Stripe Onelink — direct integration sample</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font: 16px/1.5 system-ui, -apple-system, sans-serif;
+        max-width: 540px;
+        margin: 4rem auto;
+        padding: 0 1rem;
+        color: #111;
+        background: #fff;
+      }
+      h1 { font-size: 1.5rem; }
+      a.card {
+        display: block;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        margin: 1rem 0;
+        text-decoration: none;
+        color: inherit;
+      }
+      a.card:hover { border-color: #635bff; }
+      a.card h2 { margin: 0 0 0.35rem; font-size: 1.1rem; color: #635bff; }
+      a.card p { margin: 0; color: #555; font-size: 0.95rem; }
+      code { background: #f3f3f3; padding: 0.1em 0.35em; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Gr4vy + Stripe Onelink</h1>
+    <p>
+      Two ways to render Stripe Onelink directly on your own page
+      (<code>integration_client: web</code>), both against your Gr4vy
+      account.
+    </p>
+
+    <a class="card" href="/full.html">
+      <h2>1 — Full Stripe Payment Element &rarr;</h2>
+      <p>
+        Mounts Stripe's <strong>Payment Element</strong>: the card form plus
+        the inline Onelink/Link "use your saved information" prompt for
+        returning buyers — the whole Stripe web UI.
+      </p>
+    </a>
+
+    <a class="card" href="/button.html">
+      <h2>2 — Onelink button only &rarr;</h2>
+      <p>
+        Mounts only the <strong>Express Checkout Element</strong> — the green
+        Onelink/Link button on its own, no card form.
+      </p>
+    </a>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "gr4vyId": "your-gr4vy-id",
+  "server": "sandbox",
+  "merchantAccountId": "default",
+  "paymentServiceId": "YOUR_ONELINK_PAYMENT_SERVICE_ID",
+  "privateKeyPath": "./private_key.pem",
+  "port": 3000
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Onelink — full Payment Element</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+      body {
+        font: 16px/1.5 system-ui, -apple-system, sans-serif;
+        max-width: 480px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+        color: #111;
+        background: #fff;
+      }
+      h1 { font-size: 1.35rem; }
+      .product {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        background: #f7f7f7;
+      }
+      .price { font-size: 1.2rem; font-weight: 600; }
+      #payment-element { margin: 1rem 0; min-height: 60px; }
+      button#pay {
+        width: 100%;
+        padding: 0.85rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        background: #111;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      button#pay:disabled { opacity: 0.5; cursor: default; }
+      #status {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 6px;
+        background: #f3f3f3;
+        white-space: pre-wrap;
+        font-family: ui-monospace, monospace;
+        font-size: 0.9rem;
+      }
+      .ok { background: #e6f4ea !important; color: #0b3d1f; }
+      .err { background: #fde8e8 !important; color: #5a1414; }
+      a.back { font-size: 0.9rem; color: #635bff; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="/">&larr; back</a>
+    <h1>Onelink — full Payment Element</h1>
+    <div class="product">
+      <div>Sample item</div>
+      <div class="price">$12.99 USD</div>
+    </div>
+
+    <!-- Stripe mounts the card form + inline Onelink/Link prompt here. -->
+    <div id="payment-element"></div>
+    <button id="pay" disabled>Pay</button>
+    <div id="status" hidden></div>
+
+    <script type="module">
+      import { createOnelinkTransaction, initStripeElements } from "/onelink.js";
+
+      const statusEl = document.getElementById("status");
+      const payBtn = document.getElementById("pay");
+      const set = (msg, kind) => {
+        statusEl.hidden = false;
+        statusEl.textContent = msg;
+        statusEl.className = kind || "";
+      };
+
+      let stripe, elements;
+
+      async function boot() {
+        // If we came back from an off-session redirect (e.g. 3DS), Stripe
+        // appends ?payment_intent_client_secret=... — just show the result.
+        const params = new URLSearchParams(location.search);
+        if (params.get("payment_intent_client_secret")) {
+          set("Payment confirmed — returning to merchant.", "ok");
+          return;
+        }
+
+        try {
+          set("Creating Onelink session...");
+          // A transaction is created here so Stripe has a PaymentIntent
+          // (clientSecret) to bind the Payment Element to.
+          const { sessionData } = await createOnelinkTransaction({
+            amount: 1299,
+            currency: "USD",
+            country: "US",
+          });
+
+          ({ stripe, elements } = await initStripeElements(sessionData));
+
+          // The Payment Element renders the full UI: card fields AND the
+          // Onelink/Link "use your saved information" prompt for returning
+          // buyers. billingDetails (when present) pre-fill it.
+          const paymentElement = elements.create("payment", {
+            defaultValues: sessionData.billingDetails
+              ? { billingDetails: sessionData.billingDetails }
+              : undefined,
+          });
+          paymentElement.mount("#payment-element");
+
+          statusEl.hidden = true;
+          payBtn.disabled = false;
+          payBtn.addEventListener("click", () => confirm(sessionData.returnUrl));
+        } catch (err) {
+          set(`Error: ${err.message}`, "err");
+        }
+      }
+
+      async function confirm(returnUrl) {
+        payBtn.disabled = true;
+        set("Confirming payment...");
+        // confirmPayment submits the element and, if the buyer authenticates
+        // off-session, redirects to return_url. On success it resolves here.
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: returnUrl || `${location.origin}/full.html`,
+          },
+          redirect: "if_required",
+        });
+        if (error) {
+          set(`Payment failed: ${error.message}`, "err");
+          payBtn.disabled = false;
+        } else {
+          set("Payment confirmed ✓", "ok");
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
