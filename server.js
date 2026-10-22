@@ -110,7 +110,10 @@ app.get("/transactions/:id", async (req, res) => {
   }
 });
 
-app.listen(cfg.port, () => {
+// Express 5 passes listen errors (e.g. port already in use) to this callback
+// instead of throwing them, so rethrow to fail loudly.
+app.listen(cfg.port, (err) => {
+  if (err) throw err;
   console.log(`Sample listening on http://localhost:${cfg.port}`);
   console.log(`Using Gr4vy API at ${apiUrl} (merchant=${cfg.merchantAccountId})`);
 });
